@@ -4,6 +4,24 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import { JerseyIcon } from './components/JerseyIcon'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ComposedChart,
+} from 'recharts'
 // Local lightweight icon components as fallbacks to avoid installing external deps
 // (Shirt component removed — using custom JerseyIcon per order)
 
@@ -150,6 +168,52 @@ const initialClients: Client[] = [
   { id: 'c-6', businessName: 'SportWear Tucumán', contactName: 'Javier Noguera', phone: '381-158-7788', email: 'contacto@sportwear.com.ar', address: '24 de Septiembre 800, SMT', type: 'Revendedor', status: 'Activo', totalOrders: 12 },
 ]
 
+// --- Dashboard sample data / constants ---
+const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar']
+const productionTrend = months.map((m, i) => ({
+  month: m,
+  pedidosIngresados: 800 + i * 60 + Math.round(Math.random() * 80),
+  pedidosCompletados: 680 + i * 70 + Math.round(Math.random() * 60),
+}))
+
+const weeks = ['W1', 'W2', 'W3', 'W4']
+const bottlenecks = weeks.map((w, i) => ({
+  week: w,
+  Corte: 20 + i * 5 + Math.round(Math.random() * 8),
+  Sublimado: 10 + i * 6 + Math.round(Math.random() * 6),
+  Costura: 25 + i * 3 + Math.round(Math.random() * 10),
+}))
+
+const paretoData = [
+  { reason: 'Falta de Tela', count: 40 },
+  { reason: 'Corte', count: 28 },
+  { reason: 'Diseño', count: 15 },
+  { reason: 'Máquina Rota', count: 9 },
+]
+
+// derived pareto cumulative percentage (computed later in render with useMemo)
+
+const radarData = [
+  { area: 'Corte', ideal: 100, actual: 86 },
+  { area: 'Sublimado', ideal: 100, actual: 77 },
+  { area: 'Costura', ideal: 100, actual: 81 },
+  { area: 'Control de Calidad', ideal: 100, actual: 92 },
+  { area: 'Empaque', ideal: 100, actual: 88 },
+]
+
+const topModels = [
+  { name: 'Atlético Tucumán Titular', sold: 320 },
+  { name: 'San Martín Suplente', sold: 290 },
+  { name: 'La Florida Infantil', sold: 210 },
+  { name: 'Central Córdoba Alternativa', sold: 180 },
+  { name: 'Juventud Antoniana', sold: 155 },
+  { name: 'Concepción FC', sold: 140 },
+  { name: 'Gimnasia y Tiro', sold: 130 },
+  { name: 'SportWear Tucumán - Promo', sold: 115 },
+  { name: 'Deportivo Tafí', sold: 98 },
+  { name: 'Rangers de Lules', sold: 85 },
+]
+
 const getLayerColor = (order: Order) => {
   // Prefer explicit order number mapping for clarity and scalability
   if (order.number === '0000-1') return 'text-slate-100' // suplente blanco / muy claro
@@ -196,7 +260,7 @@ const getJerseyProps = (order: Order) => {
 
 const App: React.FC = () => {
   const [activePhase, setActivePhase] = useState<Order['phase']>('INICIAL')
-  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO' | 'CLIENTES'>('PEDIDOS')
+  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO' | 'CLIENTES' | 'DASHBOARD'>('PEDIDOS')
 
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory)
   const [clients, setClients] = useState<Client[]>(initialClients)
@@ -224,6 +288,16 @@ const App: React.FC = () => {
   }, [])
 
   const filteredOrders = useMemo(() => sampleOrders.filter(o => o.phase === activePhase), [activePhase])
+
+  const paretoProcessed = useMemo(() => {
+    const sorted = [...paretoData].sort((a, b) => b.count - a.count)
+    const total = sorted.reduce((s, it) => s + it.count, 0)
+    let acc = 0
+    return sorted.map((d) => {
+      acc += d.count
+      return { ...d, cumulative: Math.round((acc / total) * 100) }
+    })
+  }, [])
 
   const isCompletedWhenProduction = (phaseId: string) => {
     if (activePhase !== 'PRODUCCIÓN') return false
@@ -276,7 +350,8 @@ const App: React.FC = () => {
             <div>
               <div className="text-xs uppercase text-slate-500 mb-2">Analytics</div>
               <div className="flex flex-col gap-2">
-                <button className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 hover:bg-slate-900">
+                <button onClick={() => setActiveView('DASHBOARD')} className={`relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${activeView === 'DASHBOARD' ? 'bg-slate-900' : 'hover:bg-slate-900'}`}>
+                  {activeView === 'DASHBOARD' && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-md bg-sky-400" />}
                   <svg className="w-5 h-5 text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3v18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M7 13l3-3 4 4 5-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <span className="font-medium">Dashboard</span>
                 </button>
@@ -297,7 +372,158 @@ const App: React.FC = () => {
 
       {/* Main content */}
       <main className="flex-1 ml-72 px-8 py-10 max-w-[95%]">
-        {activeView === 'PEDIDOS' ? (
+        {activeView === 'DASHBOARD' ? (
+          <section>
+            <header className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-semibold text-slate-800">Dashboard Analítico</h2>
+                <p className="text-sm text-slate-500 mt-1">Visión ejecutiva de producción y rendimiento</p>
+              </div>
+              <div className="flex gap-3 items-center">
+                <select className="px-3 py-2 rounded-md border border-slate-100 bg-white text-sm">
+                  <option>Este mes</option>
+                  <option>Mes anterior</option>
+                  <option>YTD</option>
+                </select>
+                <select className="px-3 py-2 rounded-md border border-slate-100 bg-white text-sm">
+                  <option>Todos</option>
+                  <option>Clubes</option>
+                  <option>Revendedores</option>
+                </select>
+                <select className="px-3 py-2 rounded-md border border-slate-100 bg-white text-sm">
+                  <option>Todas</option>
+                  <option>Producción</option>
+                  <option>Finalizado</option>
+                </select>
+              </div>
+            </header>
+
+            {/* KPI cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-slate-500">OEE</div>
+                  <div className="text-2xl font-semibold text-amber-600">78.5%</div>
+                </div>
+                <div className="text-slate-300">📈</div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-slate-500">Lead Time Promedio</div>
+                  <div className="text-2xl font-semibold text-emerald-600">14 Días</div>
+                </div>
+                <div className="text-slate-300">⏱️</div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-slate-500">Tasa de Scrap</div>
+                  <div className="text-2xl font-semibold text-rose-600">4.2% <span className="text-sm text-rose-500">↑</span></div>
+                </div>
+                <div className="text-slate-300">⚠️</div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-slate-500">Prendas Entregadas (Mes)</div>
+                  <div className="text-2xl font-semibold text-slate-800">1,245</div>
+                </div>
+                <div className="text-slate-300">🎯</div>
+              </div>
+            </div>
+
+            {/* Core charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500 mb-3">Tendencia: Producción vs Demanda (6 meses)</div>
+                <div style={{ height: 280 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={productionTrend} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.06} />
+                      <XAxis dataKey="month" stroke="#94A3B8" />
+                      <YAxis stroke="#94A3B8" />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="pedidosIngresados" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="pedidosCompletados" stroke="#10b981" strokeWidth={3} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500 mb-3">Cuellos de Botella por Fase (semanas)</div>
+                <div style={{ height: 280 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={bottlenecks} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.04} />
+                      <XAxis dataKey="week" stroke="#94A3B8" />
+                      <YAxis stroke="#94A3B8" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Corte" stackId="a" fill="#ef4444" />
+                      <Bar dataKey="Sublimado" stackId="a" fill="#f59e0b" />
+                      <Bar dataKey="Costura" stackId="a" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500 mb-3">Pareto: Motivos de Retraso</div>
+                <div style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={paretoProcessed} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.03} />
+                      <XAxis dataKey="reason" stroke="#94A3B8" />
+                      <YAxis yAxisId="left" stroke="#94A3B8" />
+                      <YAxis yAxisId="right" orientation="right" stroke="#ef4444" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="#64748b" />
+                      <Line yAxisId="right" type="monotone" dataKey="cumulative" stroke="#ef4444" strokeWidth={2} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500 mb-3">Eficiencia de Taller</div>
+                <div style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart data={radarData} outerRadius={90}>
+                      <PolarGrid />
+                      <PolarAngleAxis dataKey="area" />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                      <Radar name="Ideal" dataKey="ideal" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.15} />
+                      <Radar name="Actual" dataKey="actual" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.25} />
+                      <Legend />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500 mb-3">Top Modelos Más Vendidos</div>
+                <div style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={topModels} margin={{ top: 10, right: 30, left: 20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.03} />
+                      <XAxis type="number" stroke="#94A3B8" />
+                      <YAxis type="category" dataKey="name" width={180} stroke="#94A3B8" />
+                      <Tooltip />
+                      <Bar dataKey="sold" fill="#0ea5e9" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : activeView === 'PEDIDOS' ? (
           <>
             <header className="mb-8">
               <h2 className="text-3xl font-semibold text-slate-800">Resumen de Pedidos</h2>
