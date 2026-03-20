@@ -203,3 +203,12 @@
   background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
   backdrop-filter: blur(6px) saturate(120%);
 }
+
+/* Fade animation for order list when filtering */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-enter {
+  animation: fadeIn 320ms ease-out;
+}

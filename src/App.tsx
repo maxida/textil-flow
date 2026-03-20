@@ -2,7 +2,7 @@
 // Lightweight local icon fallbacks (size prop in px, className for color)
 
 
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import { JerseyIcon } from './components/JerseyIcon'
 // Local lightweight icon components as fallbacks to avoid installing external deps
 // (Shirt component removed — using custom JerseyIcon per order)
@@ -87,13 +87,13 @@ const sampleOrders: Order[] = [
   },
 ]
 
-const steps = [
-  'INICIAL',
-  'ACEPTACIÓN',
-  'PLANIFICACIÓN',
-  'PRODUCCIÓN',
-  'ENVIADO',
-  'FINALIZADO',
+const phases = [
+  { id: 'INICIAL', label: 'INICIAL' },
+  { id: 'ACEPTACIÓN', label: 'ACEPTACIÓN' },
+  { id: 'PLANIFICACIÓN', label: 'PLANIFICACIÓN' },
+  { id: 'PRODUCCIÓN', label: 'PRODUCCIÓN' },
+  { id: 'ENVIADO', label: 'ENVIADO' },
+  { id: 'FINALIZADO', label: 'FINALIZADO' },
 ]
 
 const getPhaseClasses = (phase: Order['phase']) => {
@@ -149,6 +149,22 @@ const getJerseyProps = (order: Order) => {
 }
 
 const App: React.FC = () => {
+  const [activePhase, setActivePhase] = useState<Order['phase']>('INICIAL')
+
+  const countsByPhase = useMemo(() => {
+    return sampleOrders.reduce<Record<string, number>>((acc, o) => {
+      acc[o.phase] = (acc[o.phase] || 0) + 1
+      return acc
+    }, {})
+  }, [])
+
+  const filteredOrders = useMemo(() => sampleOrders.filter(o => o.phase === activePhase), [activePhase])
+
+  const isCompletedWhenProduction = (phaseId: string) => {
+    if (activePhase !== 'PRODUCCIÓN') return false
+    return ['INICIAL', 'ACEPTACIÓN', 'PLANIFICACIÓN'].includes(phaseId)
+  }
+
   return (
     <div className="min-h-screen flex bg-gray-50 text-slate-900 font-sans">
       
@@ -214,7 +230,7 @@ const App: React.FC = () => {
         </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-72 p-10">
+      <main className="flex-1 ml-72 px-8 py-10 max-w-[95%]">
         <header className="mb-8">
           <h2 className="text-3xl font-semibold text-slate-800">Resumen de Pedidos</h2>
           <p className="text-sm text-slate-500 mt-1">Vista general del flujo de producción</p>
@@ -222,18 +238,22 @@ const App: React.FC = () => {
 
         {/* Workflow stepper */}
         <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-          <div className="flex items-center gap-4 justify-between flex-wrap">
-            {steps.map((step, idx) => {
-              const isActive = idx <= 3 // ejemplo: hasta PRODUCCIÓN están activas
+          <div className="grid grid-cols-6 gap-4">
+            {phases.map((p) => {
+              const isActive = p.id === activePhase
+              const isCompleted = isCompletedWhenProduction(p.id)
               return (
-                <div key={step} className="flex items-center gap-3">
-                  <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${isActive ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200'}`}>
+                <div key={p.id} className="">
+                  <button
+                    onClick={() => setActivePhase(p.id as Order['phase'])}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all duration-300 border ${isActive ? 'bg-emerald-500 text-white border-emerald-600' : isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-white text-slate-700 border-slate-200'}`}>
                     <svg className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5 12h12" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M13 5l7 7-7 7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <span className="text-sm font-medium tracking-wide">{step}</span>
-                  </div>
+                    <span className="text-sm font-medium tracking-wide">{p.label}</span>
+                    <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">{countsByPhase[p.id] || 0}</span>
+                  </button>
                 </div>
               )
             })}
@@ -241,8 +261,8 @@ const App: React.FC = () => {
         </div>
 
         {/* Orders list */}
-        <section className="space-y-6">
-          {sampleOrders.map((o) => (
+        <section key={activePhase} className="space-y-6 fade-enter">
+          {filteredOrders.map((o) => (
             <article key={o.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex items-center justify-between order-card glassy">
               <div className="flex-1">
                 <div className="flex items-start justify-between">
