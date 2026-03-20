@@ -31,60 +31,50 @@ type Order = {
   sizeBreakdown?: string
   description?: string
   urgency?: 'Normal' | 'Urgente'
+  urgent?: boolean
+  primaryColor?: string
+  secondaryColor?: string
+  pattern?: 'solid' | 'striped' | 'v-stripes'
   phase: 'INICIAL' | 'ACEPTACIÓN' | 'PLANIFICACIÓN' | 'PRODUCCIÓN' | 'ENVIADO' | 'FINALIZADO'
   active?: boolean
 }
 
 const sampleOrders: Order[] = [
-  {
-    id: '1',
-    number: '0000-1',
-    status: 'Pendiente',
-    model: "C.A. San Martín - Suplente",
-    quantity: 22,
-    technique: 'Escudo bordado HD',
-    sizeBreakdown: '2 Arqueros (Gris), 20 Jugadores (Talles: 5S, 8M, 5L, 2XL)',
-    description: '2 arqueros + 20 jugadores — colores y talles variados',
-    urgency: 'Normal',
-    phase: 'INICIAL',
-    active: true,
-  },
-  {
-    id: '2',
-    number: '0000-2',
-    status: 'En progreso',
-    model: 'Inter Tucumán - Torneo Relámpago',
-    quantity: 15,
-    technique: 'Vinilo dorado para números',
-    sizeBreakdown: 'Talle L (12), Talle M (3)',
-    description: 'Equipamiento para torneo relámpago',
-    urgency: 'Urgente',
-    phase: 'PRODUCCIÓN',
-  },
-  {
-    id: '3',
-    number: '0000-3',
-    status: 'Pendiente',
-    model: 'Los Leoncitos - Infantil',
-    quantity: 50,
-    technique: 'Logo sublimado',
-    sizeBreakdown: 'Talles 10, 12 y 14. Numeración 1-50',
-    description: 'Línea infantil con numeración corrida',
-    urgency: 'Normal',
-    phase: 'ACEPTACIÓN',
-  },
-  {
-    id: '4',
-    number: '0000-4',
-    status: 'Completado',
-    model: 'Atlético Tucumán - Edición Especial',
-    quantity: 100,
-    technique: 'Parche en manga',
-    sizeBreakdown: 'Curva completa (S a XL)',
-    description: 'Edición especial con parche y curva completa de talles',
-    urgency: 'Normal',
-    phase: 'FINALIZADO',
-  },
+  // INICIAL (3)
+  { id: '1', number: '1000-1', status: 'Pendiente', model: 'Central Córdoba (Ferro)', quantity: 30, technique: 'Sublimado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#FFFFFF', secondaryColor: '#000000', pattern: 'striped', phase: 'INICIAL' },
+  { id: '2', number: '1000-2', status: 'Pendiente', model: 'La Florida', quantity: 18, technique: 'Bordado + vinilo', sizeBreakdown: 'M-L', description: '', urgency: 'Normal', urgent: false, primaryColor: '#BF0A30', secondaryColor: '#FFFFFF', pattern: 'striped', phase: 'INICIAL' },
+  { id: '3', number: '1000-3', status: 'Pendiente', model: 'San Jorge', quantity: 12, technique: 'Sublimado', sizeBreakdown: 'S-M-L', description: '', urgency: 'Normal', urgent: false, primaryColor: '#0F9D58', secondaryColor: '#FFFFFF', pattern: 'solid', phase: 'INICIAL' },
+
+  // ACEPTACIÓN (2)
+  { id: '4', number: '1000-4', status: 'Aceptación', model: 'Club Mitre', quantity: 25, technique: 'Sublimado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#FFD600', secondaryColor: '#000000', pattern: 'striped', phase: 'ACEPTACIÓN' },
+  { id: '5', number: '1000-5', status: 'Aceptación', model: 'Concepción FC', quantity: 40, technique: 'Vinilo', sizeBreakdown: '8-14', description: '', urgency: 'Normal', urgent: false, primaryColor: '#1E40AF', secondaryColor: '#000000', pattern: 'solid', phase: 'ACEPTACIÓN' },
+
+  // PLANIFICACIÓN (1)
+  { id: '6', number: '1000-6', status: 'Planificación', model: 'Ñuñorco', quantity: 20, technique: 'Sublimado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#DC2626', secondaryColor: '#FFFFFF', pattern: 'v-stripes', phase: 'PLANIFICACIÓN' },
+
+  // PRODUCCIÓN (4)
+  { id: '7', number: '1000-7', status: 'Producción', model: 'San Lorenzo de Alem', quantity: 60, technique: 'Sublimado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Urgente', urgent: true, primaryColor: '#1E3A8A', secondaryColor: '#7C1D3A', pattern: 'striped', phase: 'PRODUCCIÓN' },
+  { id: '8', number: '1000-8', status: 'Producción', model: 'Juventud Antoniana', quantity: 35, technique: 'Bordado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#FFFFFF', secondaryColor: '#8B5E3C', pattern: 'solid', phase: 'PRODUCCIÓN' },
+  { id: '9', number: '1000-9', status: 'Producción', model: 'Chaco For Ever', quantity: 28, technique: 'Vinilo', sizeBreakdown: 'M-L', description: '', urgency: 'Normal', urgent: false, primaryColor: '#000000', secondaryColor: '#FFFFFF', pattern: 'striped', phase: 'PRODUCCIÓN' },
+  { id: '10', number: '1000-10', status: 'Producción', model: 'Gimnasia y Tiro', quantity: 45, technique: 'Sublimado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#7DD3FC', secondaryColor: '#FFFFFF', pattern: 'solid', phase: 'PRODUCCIÓN' },
+
+  // ENVIADO (6) - equipos barriales variados
+  { id: '11', number: '1000-11', status: 'Enviado', model: 'Los Pibes de la 14', quantity: 22, technique: 'Vinilo', sizeBreakdown: 'S-M-L', description: '', urgency: 'Normal', urgent: false, primaryColor: '#6B21A8', secondaryColor: '#FFFFFF', pattern: 'solid', phase: 'ENVIADO' },
+  { id: '12', number: '1000-12', status: 'Enviado', model: 'Deportivo Tafí', quantity: 16, technique: 'Sublimado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#84CC16', secondaryColor: '#000000', pattern: 'solid', phase: 'ENVIADO' },
+  { id: '13', number: '1000-13', status: 'Enviado', model: 'Rangers de Lules', quantity: 14, technique: 'Vinilo', sizeBreakdown: 'M-L', description: '', urgency: 'Normal', urgent: false, primaryColor: '#9CA3AF', secondaryColor: '#111827', pattern: 'solid', phase: 'ENVIADO' },
+  { id: '14', number: '1000-14', status: 'Enviado', model: 'Atlético Barrio Sur', quantity: 18, technique: 'Bordado', sizeBreakdown: 'S-M', description: '', urgency: 'Normal', urgent: false, primaryColor: '#F472B6', secondaryColor: '#FFFFFF', pattern: 'solid', phase: 'ENVIADO' },
+  { id: '15', number: '1000-15', status: 'Enviado', model: 'Unión Norte', quantity: 20, technique: 'Sublimado', sizeBreakdown: 'S-XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#06B6D4', secondaryColor: '#042A2B', pattern: 'solid', phase: 'ENVIADO' },
+  { id: '16', number: '1000-16', status: 'Enviado', model: 'Cultural Granate', quantity: 12, technique: 'Vinilo', sizeBreakdown: 'M-L', description: '', urgency: 'Normal', urgent: false, primaryColor: '#7C0A02', secondaryColor: '#FFFFFF', pattern: 'solid', phase: 'ENVIADO' },
+
+  // FINALIZADO (8) - históricos
+  { id: '17', number: '1000-17', status: 'Completado', model: 'Boca Juniors', quantity: 120, technique: 'Sublimado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#0033A0', secondaryColor: '#FFCB05', pattern: 'striped', phase: 'FINALIZADO' },
+  { id: '18', number: '1000-18', status: 'Completado', model: 'River Plate', quantity: 110, technique: 'Bordado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#FFFFFF', secondaryColor: '#C8102E', pattern: 'striped', phase: 'FINALIZADO' },
+  { id: '19', number: '1000-19', status: 'Completado', model: 'Selección Argentina', quantity: 200, technique: 'Sublimado', sizeBreakdown: 'S-4XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#75AADB', secondaryColor: '#FFFFFF', pattern: 'v-stripes', phase: 'FINALIZADO' },
+  { id: '20', number: '1000-20', status: 'Completado', model: 'Selección Brasil', quantity: 180, technique: 'Sublimado', sizeBreakdown: 'S-4XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#009C3B', secondaryColor: '#FFCC29', pattern: 'solid', phase: 'FINALIZADO' },
+  { id: '21', number: '1000-21', status: 'Completado', model: 'Real Madrid', quantity: 90, technique: 'Bordado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#FFFFFF', secondaryColor: '#000000', pattern: 'striped', phase: 'FINALIZADO' },
+  { id: '22', number: '1000-22', status: 'Completado', model: 'Barcelona', quantity: 95, technique: 'Sublimado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#A50044', secondaryColor: '#004D98', pattern: 'striped', phase: 'FINALIZADO' },
+  { id: '23', number: '1000-23', status: 'Completado', model: 'Manchester United', quantity: 80, technique: 'Bordado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#DA291C', secondaryColor: '#FFFFFF', pattern: 'solid', phase: 'FINALIZADO' },
+  { id: '24', number: '1000-24', status: 'Completado', model: 'Juventus', quantity: 70, technique: 'Sublimado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#000000', secondaryColor: '#FFFFFF', pattern: 'v-stripes', phase: 'FINALIZADO' },
 ]
 
 const phases = [
@@ -132,19 +122,30 @@ const getLayerColor = (order: Order) => {
 }
 
 const getJerseyProps = (order: Order) => {
+  // Prefer explicit colors/patterns provided on the order object
+  if (order.primaryColor) {
+    return {
+      primaryColor: order.primaryColor,
+      secondaryColor: order.secondaryColor ?? '#FFFFFF',
+      pattern: (order.pattern as any) ?? 'solid',
+      className: 'h-12 w-12',
+    }
+  }
+
+  // Fallback mapping for legacy order numbers
   switch (order.number) {
     case '0000-1':
-      return { primaryColor: '#FFFFFF', secondaryColor: '#ef4444', pattern: 'striped' as const }
+      return { primaryColor: '#FFFFFF', secondaryColor: '#ef4444', pattern: 'striped' as const, className: 'h-12 w-12' }
     case '0000-2':
       // Inter Tucumán: negra con franjas azules
-      return { primaryColor: '#000000', secondaryColor: '#1d4ed8', pattern: 'striped' as const }
+      return { primaryColor: '#000000', secondaryColor: '#1d4ed8', pattern: 'striped' as const, className: 'h-12 w-12' }
     case '0000-3':
-      return { primaryColor: '#F97316', pattern: 'solid' as const }
+      return { primaryColor: '#F97316', pattern: 'solid' as const, className: 'h-12 w-12' }
     case '0000-4':
-      return { primaryColor: '#7DD3FC', secondaryColor: '#FFFFFF', pattern: 'striped' as const }
+      return { primaryColor: '#7DD3FC', secondaryColor: '#FFFFFF', pattern: 'striped' as const, className: 'h-12 w-12' }
     default:
       // Fallback: neutral jersey
-      return { primaryColor: '#94A3B8', pattern: 'solid' as const }
+      return { primaryColor: '#94A3B8', pattern: 'solid' as const, className: 'h-12 w-12' }
   }
 }
 
