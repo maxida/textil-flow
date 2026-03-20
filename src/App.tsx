@@ -77,6 +77,27 @@ const sampleOrders: Order[] = [
   { id: '24', number: '1000-24', status: 'Completado', model: 'Juventus', quantity: 70, technique: 'Sublimado', sizeBreakdown: 'S-3XL', description: '', urgency: 'Normal', urgent: false, primaryColor: '#000000', secondaryColor: '#FFFFFF', pattern: 'v-stripes', phase: 'FINALIZADO' },
 ]
 
+type InventoryItem = {
+  id: string
+  model: string
+  stock: number
+  minStock: number // Punto de reorden (alerta)
+  primaryColor: string
+  secondaryColor?: string
+  pattern?: 'solid' | 'striped' | 'v-stripes'
+}
+
+const initialInventory: InventoryItem[] = [
+  { id: 'inv-1', model: 'Boca Juniors - Titular', stock: 150, minStock: 50, primaryColor: '#0033A0', secondaryColor: '#FFCB05', pattern: 'v-stripes' },
+  { id: 'inv-2', model: 'River Plate - Titular', stock: 18, minStock: 30, primaryColor: '#FFFFFF', secondaryColor: '#C8102E', pattern: 'v-stripes' }, // Stock bajo
+  { id: 'inv-3', model: 'San Martín (T) - Suplente', stock: 5, minStock: 20, primaryColor: '#FFFFFF', secondaryColor: '#ef4444', pattern: 'striped' }, // Crítico
+  { id: 'inv-4', model: 'Atlético Tucumán', stock: 85, minStock: 40, primaryColor: '#7DD3FC', secondaryColor: '#FFFFFF', pattern: 'striped' },
+  { id: 'inv-5', model: 'San Jorge - Titular', stock: 45, minStock: 15, primaryColor: '#0F9D58', secondaryColor: '#FFFFFF', pattern: 'solid' },
+  { id: 'inv-6', model: 'Concepción FC', stock: 0, minStock: 20, primaryColor: '#1E40AF', secondaryColor: '#000000', pattern: 'solid' }, // Sin stock
+  { id: 'inv-7', model: 'La Florida', stock: 60, minStock: 25, primaryColor: '#BF0A30', secondaryColor: '#FFFFFF', pattern: 'striped' },
+  { id: 'inv-8', model: 'Central Córdoba', stock: 32, minStock: 30, primaryColor: '#FFFFFF', secondaryColor: '#000000', pattern: 'striped' },
+]
+
 const phases = [
   { id: 'INICIAL', label: 'INICIAL' },
   { id: 'ACEPTACIÓN', label: 'ACEPTACIÓN' },
@@ -85,6 +106,8 @@ const phases = [
   { id: 'ENVIADO', label: 'ENVIADO' },
   { id: 'FINALIZADO', label: 'FINALIZADO' },
 ]
+
+
 
 const getPhaseClasses = (phase: Order['phase']) => {
   switch (phase) {
@@ -151,6 +174,19 @@ const getJerseyProps = (order: Order) => {
 
 const App: React.FC = () => {
   const [activePhase, setActivePhase] = useState<Order['phase']>('INICIAL')
+  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO'>('PEDIDOS')
+
+  const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory)
+
+  const updateStock = (id: string, change: number) => {
+    setInventory((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it
+        const newStock = Math.max(0, it.stock + change)
+        return { ...it, stock: newStock }
+      })
+    )
+  }
 
   const countsByPhase = useMemo(() => {
     return sampleOrders.reduce<Record<string, number>>((acc, o) => {
@@ -172,21 +208,21 @@ const App: React.FC = () => {
         {/* Sidebar - Senior 2026 redesign */}
         <aside className="w-72 bg-slate-950 text-white px-6 py-8 fixed inset-y-0 left-0 shadow-lg flex flex-col border-r border-slate-800 backdrop-blur-sm transition-all duration-300">
           <div className="mb-8">
-            <h1 className="text-3xl font-white tracking-tighter text-black" style={{ textShadow: '0 3px 10px rgba(255, 255, 255, 0.35)' }}>Textil-Flow</h1>
+            <h1 className="text-3xl font-white tracking-tighter text-black" style={{ textShadow: '0 3px 10px rgba(255, 255, 255, 0.99)' }}>Menú</h1>
           </div>
 
           <nav className="mt-6 space-y-6">
             <div>
               <div className="text-xs uppercase text-slate-500 mb-2">Gestión</div>
               <div className="flex flex-col gap-2">
-                <button className="relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 hover:bg-slate-900">
+                <button onClick={() => setActiveView('PEDIDOS')} className={`relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${activeView === 'PEDIDOS' ? 'bg-slate-900' : 'hover:bg-slate-900'}`}>
                   {/* active indicator */}
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-md bg-sky-400" />
+                  {activeView === 'PEDIDOS' && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-md bg-sky-400" />}
                   <svg className="w-5 h-5 text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 16V8a2 2 0 0 0-2-2h-4l-2-2h-4L7 6H3a2 2 0 0 0-2 2v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <span className="font-medium">Pedidos</span>
                 </button>
 
-                <button className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 hover:bg-slate-900">
+                <button onClick={() => setActiveView('INVENTARIO')} className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${activeView === 'INVENTARIO' ? 'bg-slate-900' : 'hover:bg-slate-900'}`}>
                   <svg className="w-5 h-5 text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M6 11h12M10 15h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <span className="font-medium">Inventario</span>
                 </button>
@@ -232,95 +268,135 @@ const App: React.FC = () => {
 
       {/* Main content */}
       <main className="flex-1 ml-72 px-8 py-10 max-w-[95%]">
-        <header className="mb-8">
-          <h2 className="text-3xl font-semibold text-slate-800">Resumen de Pedidos</h2>
-          <p className="text-sm text-slate-500 mt-1">Vista general del flujo de producción</p>
-        </header>
+        {activeView === 'PEDIDOS' ? (
+          <>
+            <header className="mb-8">
+              <h2 className="text-3xl font-semibold text-slate-800">Resumen de Pedidos</h2>
+              <p className="text-sm text-slate-500 mt-1">Vista general del flujo de producción</p>
+            </header>
 
-        {/* Workflow stepper */}
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-          <div className="grid grid-cols-6 gap-4">
-            {phases.map((p) => {
-              const isActive = p.id === activePhase
-              const isCompleted = isCompletedWhenProduction(p.id)
-              return (
-                <div key={p.id} className="">
-                  <button
-                    onClick={() => setActivePhase(p.id as Order['phase'])}
-                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all duration-300 border ${isActive ? 'bg-emerald-500 text-white border-emerald-600' : isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-white text-slate-700 border-slate-200'}`}>
-                    <svg className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5 12h12" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M13 5l7 7-7 7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-sm font-medium tracking-wide">{p.label}</span>
-                    <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">{countsByPhase[p.id] || 0}</span>
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Orders list */}
-        <section key={activePhase} className="space-y-6 fade-enter">
-          {filteredOrders.map((o) => (
-            <article key={o.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex items-center justify-between order-card glassy">
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <h3 className="text-lg font-medium text-slate-800">Orden Pedido {o.number}</h3>
-                </div>
-
-                <div className="mt-3 flex items-center gap-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold bg-sky-50 text-sky-800">Cantidad: {o.quantity}</span>
-                  <span className="text-sm text-slate-500">Estado: <span className="font-semibold text-slate-700">{o.status}</span></span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="h-12 w-12 flex items-center justify-center">
-                      <JerseyIcon {...getJerseyProps(o)} className="h-12 w-12" />
+            {/* Workflow stepper */}
+            <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+              <div className="grid grid-cols-6 gap-4">
+                {phases.map((p) => {
+                  const isActive = p.id === activePhase
+                  const isCompleted = isCompletedWhenProduction(p.id)
+                  return (
+                    <div key={p.id} className="">
+                      <button
+                        onClick={() => setActivePhase(p.id as Order['phase'])}
+                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all duration-300 border ${isActive ? 'bg-emerald-500 text-white border-emerald-600' : isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-white text-slate-700 border-slate-200'}`}>
+                        <svg className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M5 12h12" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M13 5l7 7-7 7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="text-sm font-medium tracking-wide">{p.label}</span>
+                        <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">{countsByPhase[p.id] || 0}</span>
+                      </button>
                     </div>
-                    <div>
-                      <div className="text-slate-500 text-xs">Modelo</div>
-                      <div className="font-semibold text-slate-800">{o.model}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Layers size={18} className={`${getLayerColor(o)}`} />
-                    <div>
-                      <div className="text-slate-500 text-xs">Tela / Técnica</div>
-                      <div className="font-semibold text-slate-800">{o.technique}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Ruler size={18} className="text-slate-400" />
-                    <div>
-                      <div className="text-slate-500 text-xs">Desglose Talles</div>
-                      <div className="font-semibold text-slate-800">{o.sizeBreakdown}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {o.description && <div className="mt-3 text-sm text-slate-500">{o.description}</div>}
+                  )
+                })}
               </div>
+            </div>
 
-              <div className="flex flex-col items-end gap-3 ml-6">
-                <div className="flex items-center gap-3">
-                  <div className="text-sm text-slate-500 mr-2">Urgencia</div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-block w-2 h-2 rounded-full ${o.urgency === 'Urgente' ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-                    <span className={`text-sm font-semibold text-slate-700 ${o.urgency === 'Urgente' ? 'tracking-wide' : ''}`}>{o.urgency}</span>
+            {/* Orders list */}
+            <section key={activePhase} className="space-y-6 fade-enter">
+              {filteredOrders.map((o) => (
+                <article key={o.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex items-center justify-between order-card glassy">
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-lg font-medium text-slate-800">Orden Pedido {o.number}</h3>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold bg-sky-50 text-sky-800">Cantidad: {o.quantity}</span>
+                      <span className="text-sm text-slate-500">Estado: <span className="font-semibold text-slate-700">{o.status}</span></span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-12 w-12 flex items-center justify-center">
+                          <JerseyIcon {...getJerseyProps(o)} className="h-12 w-12" />
+                        </div>
+                        <div>
+                          <div className="text-slate-500 text-xs">Modelo</div>
+                          <div className="font-semibold text-slate-800">{o.model}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Layers size={18} className={`${getLayerColor(o)}`} />
+                        <div>
+                          <div className="text-slate-500 text-xs">Tela / Técnica</div>
+                          <div className="font-semibold text-slate-800">{o.technique}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Ruler size={18} className="text-slate-400" />
+                        <div>
+                          <div className="text-slate-500 text-xs">Desglose Talles</div>
+                          <div className="font-semibold text-slate-800">{o.sizeBreakdown}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {o.description && <div className="mt-3 text-sm text-slate-500">{o.description}</div>}
                   </div>
-                </div>
 
-                <div className="text-xs text-slate-500">FASE</div>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium phase-badge ${getPhaseClasses(o.phase)}`}>{o.phase}</span>
-              </div>
-            </article>
-          ))}
-        </section>
+                  <div className="flex flex-col items-end gap-3 ml-6">
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm text-slate-500 mr-2">Urgencia</div>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block w-2 h-2 rounded-full ${o.urgency === 'Urgente' ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
+                        <span className={`text-sm font-semibold text-slate-700 ${o.urgency === 'Urgente' ? 'tracking-wide' : ''}`}>{o.urgency}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-slate-500">FASE</div>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium phase-badge ${getPhaseClasses(o.phase)}`}>{o.phase}</span>
+                  </div>
+                </article>
+              ))}
+            </section>
+          </>
+        ) : (
+          <section>
+            <header className="mb-6">
+              <h2 className="text-3xl font-semibold text-slate-800">Inventario de Modelos</h2>
+              <p className="text-sm text-slate-500 mt-1">Control de stock físico</p>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {inventory.map((item) => {
+                const isOut = item.stock === 0
+                const isLow = !isOut && item.stock < item.minStock
+                const badgeClass = isOut ? 'bg-red-100 text-red-800' : isLow ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                const badgeText = isOut ? 'Agotado' : isLow ? 'Stock bajo' : 'En stock'
+                return (
+                  <div key={item.id} className="bg-white rounded-lg shadow p-4 flex flex-col">
+                    <div className="bg-slate-50 rounded-md p-4 flex items-center justify-center">
+                      <JerseyIcon primaryColor={item.primaryColor} secondaryColor={item.secondaryColor} pattern={item.pattern} className="h-28 w-28" />
+                    </div>
+
+                    <div className="mt-4 text-center">
+                      <div className="font-semibold text-slate-800">{item.model}</div>
+                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium {badgeClass}">
+                        <span className={`px-2 py-0.5 rounded-full ${badgeClass}`}>{badgeText}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-between">
+                      <button onClick={() => updateStock(item.id, -1)} className={`px-3 py-2 rounded-md text-white font-semibold transition ${item.stock === 0 ? 'bg-slate-300 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'}`}>-</button>
+                      <div className="text-2xl font-bold text-slate-800 text-center">{item.stock}</div>
+                      <button onClick={() => updateStock(item.id, 1)} className="px-3 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition">+</button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   )
