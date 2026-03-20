@@ -1,3 +1,15 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Theme-backed CSS variables using Tailwind v4 theme() utility */
+    --sidebar: theme('colors.slate.900');
+    --content-bg: theme('colors.gray.50');
+    --card-bg: theme('colors.white');
+    --success: theme('colors.emerald.500');
+  }
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -51,7 +63,8 @@
 }
 
 #root {
-  width: 1126px;
+  /* Aumentado ancho base para dar más espacio horizontal a los contenedores */
+  width: 1700px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
