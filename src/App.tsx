@@ -260,7 +260,7 @@ const getJerseyProps = (order: Order) => {
 
 const App: React.FC = () => {
   const [activePhase, setActivePhase] = useState<Order['phase']>('INICIAL')
-  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO' | 'CLIENTES' | 'DASHBOARD'>('PEDIDOS')
+  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO' | 'CLIENTES' | 'DASHBOARD' | 'PROVEEDORES'>('PEDIDOS')
 
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory)
   const [clients, setClients] = useState<Client[]>(initialClients)
@@ -269,6 +269,40 @@ const App: React.FC = () => {
     // placeholder effect so linter/typecheck treats setClients as used
     void setClients
   }, [setClients])
+  // --- Proveedores: type + sample data + state ---
+  type Provider = {
+    id: string
+    name: string
+    contactName: string
+    phone: string
+    email: string
+    address: string
+    category: 'Textil' | 'Maquinaria' | 'Packaging' | 'Logística'
+    status: 'Activo' | 'Inactivo'
+    leadTimeDays: number
+    lastOrderDate: string
+    rating: number // 1-5
+    totalSupplied: number
+  }
+
+  const initialProviders: Provider[] = [
+    { id: 'p-1', name: 'Hilados Tucumán S.A.', contactName: 'Lorena Ruiz', phone: '381-154-0011', email: 'compras@hiladostuc.com', address: 'Ing. Budge 1200, SMT', category: 'Textil', status: 'Activo', leadTimeDays: 7, lastOrderDate: '2026-03-02', rating: 4.6, totalSupplied: 1240 },
+    { id: 'p-2', name: 'Corte y Troquel SRL', contactName: 'Pablo Mendez', phone: '381-155-4455', email: 'p.mendez@corte.com', address: 'Av. Roca 450, SMT', category: 'Maquinaria', status: 'Activo', leadTimeDays: 12, lastOrderDate: '2026-02-25', rating: 4.1, totalSupplied: 860 },
+    { id: 'p-3', name: 'Empaques del Norte', contactName: 'Sofía López', phone: '381-156-7788', email: 'ventas@empaquesnorte.com', address: 'Juan B. Justo 210, Yerba Buena', category: 'Packaging', status: 'Activo', leadTimeDays: 5, lastOrderDate: '2026-03-05', rating: 4.8, totalSupplied: 980 },
+    { id: 'p-4', name: 'Logística Tafí Express', contactName: 'Mauricio Ruiz', phone: '381-422-3344', email: 'log@tafi-express.com', address: 'Ruta 301 Km 8, Tafí Viejo', category: 'Logística', status: 'Activo', leadTimeDays: 3, lastOrderDate: '2026-03-10', rating: 4.9, totalSupplied: 1420 },
+    { id: 'p-5', name: 'Tejidos del Sur', contactName: 'Ana Villagra', phone: '381-153-9900', email: 'ana@tejidosdelsur.com', address: 'Av. Perón 2200, SMT', category: 'Textil', status: 'Inactivo', leadTimeDays: 20, lastOrderDate: '2025-11-12', rating: 3.6, totalSupplied: 210 },
+  ]
+
+  const [providers, setProviders] = useState<Provider[]>(initialProviders)
+  useEffect(() => { void setProviders }, [setProviders])
+
+  const providersStats = useMemo(() => {
+    const total = providers.length
+    const activos = providers.filter(p => p.status === 'Activo').length
+    const avgLead = providers.reduce((s, p) => s + p.leadTimeDays, 0) / Math.max(1, total)
+    const avgRating = providers.reduce((s, p) => s + p.rating, 0) / Math.max(1, total)
+    return { total, activos, avgLead: Math.round(avgLead * 10) / 10, avgRating: Math.round(avgRating * 10) / 10 }
+  }, [providers])
 
   const updateStock = (id: string, change: number) => {
     setInventory((prev) =>
@@ -340,7 +374,8 @@ const App: React.FC = () => {
                   <span className="font-medium">Clientes</span>
                 </button>
 
-                <button className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 hover:bg-slate-900">
+                <button onClick={() => setActiveView('PROVEEDORES')} className={`relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${activeView === 'PROVEEDORES' ? 'bg-slate-900' : 'hover:bg-slate-900'}`}>
+                  {activeView === 'PROVEEDORES' && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-md bg-sky-400" />}
                   <svg className="w-5 h-5 text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M5 7v14h14V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <span className="font-medium">Proveedores</span>
                 </button>
@@ -739,6 +774,91 @@ const App: React.FC = () => {
                           <button className="p-2 rounded-md hover:bg-slate-100">
                             <svg className="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="12" cy="18" r="1.5" stroke="currentColor" strokeWidth="1.2"/></svg>
                           </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : activeView === 'PROVEEDORES' ? (
+          <section>
+            <header className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-semibold text-slate-800">Proveedores</h2>
+                <p className="text-sm text-slate-500 mt-1">Relación y desempeño de proveedores</p>
+              </div>
+              <div>
+                <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-sky-500 hover:bg-sky-600 text-white font-semibold">+ Nuevo Proveedor</button>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500">Total Proveedores</div>
+                <div className="text-2xl font-semibold text-slate-800">{providersStats.total}</div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500">Activos</div>
+                <div className="text-2xl font-semibold text-emerald-600">{providersStats.activos}</div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500">Lead Time Promedio</div>
+                <div className="text-2xl font-semibold text-slate-800">{providersStats.avgLead} días</div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+                <div className="text-sm text-slate-500">Valoración Promedio</div>
+                <div className="text-2xl font-semibold text-amber-600">{providersStats.avgRating} ★</div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-50">
+                  <tr className="text-xs uppercase text-slate-500">
+                    <th className="p-4 border-b border-slate-100">Proveedor</th>
+                    <th className="p-4 border-b border-slate-100">Contacto</th>
+                    <th className="p-4 border-b border-slate-100">Categoría</th>
+                    <th className="p-4 border-b border-slate-100">Lead Time</th>
+                    <th className="p-4 border-b border-slate-100">Último Pedido</th>
+                    <th className="p-4 border-b border-slate-100">Rating</th>
+                    <th className="p-4 border-b border-slate-100">Estado</th>
+                    <th className="p-4 border-b border-slate-100">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {providers.map((p) => {
+                    const catClass = p.category === 'Textil' ? 'bg-emerald-100 text-emerald-800' : p.category === 'Maquinaria' ? 'bg-slate-100 text-slate-800' : p.category === 'Packaging' ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="font-medium text-slate-900">{p.name}</div>
+                          <div className="text-sm text-slate-500">Suministrado: {p.totalSupplied} unidades</div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="text-sm text-slate-700">{p.contactName}</div>
+                          <div className="text-sm text-slate-500 mt-1">{p.phone} · {p.email}</div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${catClass}`}>{p.category}</span>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">{p.leadTimeDays} días</td>
+                        <td className="p-4 align-top border-b border-slate-100">{p.lastOrderDate}</td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="text-sm text-slate-800 font-semibold">{p.rating} ★</div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full ${p.status === 'Activo' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            <span className="text-sm text-slate-700">{p.status}</span>
+                          </div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <button className="p-2 rounded-md hover:bg-slate-100">Detalles</button>
                         </td>
                       </tr>
                     )
