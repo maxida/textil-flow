@@ -2,7 +2,7 @@
 // Lightweight local icon fallbacks (size prop in px, className for color)
 
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { JerseyIcon } from './components/JerseyIcon'
 // Local lightweight icon components as fallbacks to avoid installing external deps
 // (Shirt component removed — using custom JerseyIcon per order)
@@ -128,6 +128,28 @@ const getPhaseClasses = (phase: Order['phase']) => {
   }
 }
 
+// --- Clientes: types + sample data (local Tucumán addresses) ---
+type Client = {
+  id: string
+  businessName: string
+  contactName: string
+  phone: string
+  email: string
+  address: string
+  type: 'Club' | 'Escuela' | 'Empresa' | 'Revendedor'
+  status: 'Activo' | 'Inactivo'
+  totalOrders: number
+}
+
+const initialClients: Client[] = [
+  { id: 'c-1', businessName: 'Club Atlético San Martín', contactName: 'Roberto Gómez', phone: '381-155-2345', email: 'compras@casm.com.ar', address: 'Bolívar 1960, SMT', type: 'Club', status: 'Activo', totalOrders: 24 },
+  { id: 'c-2', businessName: 'Deportes El Campeón', contactName: 'María Laura', phone: '381-154-9876', email: 'ventas@elcampeon.com', address: 'San Martín 650, SMT', type: 'Revendedor', status: 'Activo', totalOrders: 15 },
+  { id: 'c-3', businessName: 'Colegio San Francisco', contactName: 'Hna. Carmen', phone: '381-422-1122', email: 'administracion@csf.edu.ar', address: 'Marcos Paz 145, SMT', type: 'Escuela', status: 'Activo', totalOrders: 3 },
+  { id: 'c-4', businessName: 'Metalúrgica Los Andes', contactName: 'Hugo Silva', phone: '381-156-3344', email: 'hsilva@metalurgica.com', address: 'Parque Industrial, Tafí Viejo', type: 'Empresa', status: 'Activo', totalOrders: 8 },
+  { id: 'c-5', businessName: 'Escuelita Los Pumas', contactName: 'Profe Daniel', phone: '381-153-2211', email: 'lospumasfutbol@gmail.com', address: 'Av. Perón 1500, Yerba Buena', type: 'Club', status: 'Inactivo', totalOrders: 1 },
+  { id: 'c-6', businessName: 'SportWear Tucumán', contactName: 'Javier Noguera', phone: '381-158-7788', email: 'contacto@sportwear.com.ar', address: '24 de Septiembre 800, SMT', type: 'Revendedor', status: 'Activo', totalOrders: 12 },
+]
+
 const getLayerColor = (order: Order) => {
   // Prefer explicit order number mapping for clarity and scalability
   if (order.number === '0000-1') return 'text-slate-100' // suplente blanco / muy claro
@@ -174,9 +196,15 @@ const getJerseyProps = (order: Order) => {
 
 const App: React.FC = () => {
   const [activePhase, setActivePhase] = useState<Order['phase']>('INICIAL')
-  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO'>('PEDIDOS')
+  const [activeView, setActiveView] = useState<'PEDIDOS' | 'INVENTARIO' | 'CLIENTES'>('PEDIDOS')
 
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory)
+  const [clients, setClients] = useState<Client[]>(initialClients)
+  // consume setter to avoid unused-local errors (will be used for future CRUD operations)
+  useEffect(() => {
+    // placeholder effect so linter/typecheck treats setClients as used
+    void setClients
+  }, [setClients])
 
   const updateStock = (id: string, change: number) => {
     setInventory((prev) =>
@@ -232,7 +260,8 @@ const App: React.FC = () => {
             <div>
               <div className="text-xs uppercase text-slate-500 mb-2">Admin</div>
               <div className="flex flex-col gap-2">
-                <button className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 hover:bg-slate-900">
+                <button onClick={() => setActiveView('CLIENTES')} className={`relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${activeView === 'CLIENTES' ? 'bg-slate-900' : 'hover:bg-slate-900'}`}>
+                  {activeView === 'CLIENTES' && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-md bg-sky-400" />}
                   <svg className="w-5 h-5 text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <span className="font-medium">Clientes</span>
                 </button>
@@ -360,7 +389,7 @@ const App: React.FC = () => {
               ))}
             </section>
           </>
-        ) : (
+        ) : activeView === 'INVENTARIO' ? (
           <section>
             <header className="mb-6">
               <h2 className="text-3xl font-semibold text-slate-800">Inventario de Modelos</h2>
@@ -381,7 +410,7 @@ const App: React.FC = () => {
 
                     <div className="mt-4 text-center">
                       <div className="font-semibold text-slate-800">{item.model}</div>
-                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium {badgeClass}">
+                      <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${badgeClass}`}>
                         <span className={`px-2 py-0.5 rounded-full ${badgeClass}`}>{badgeText}</span>
                       </div>
                     </div>
@@ -396,7 +425,103 @@ const App: React.FC = () => {
               })}
             </div>
           </section>
-        )}
+        ) : activeView === 'CLIENTES' ? (
+          <section>
+            <header className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-semibold text-slate-800">Directorio de Clientes</h2>
+                <p className="text-sm text-slate-500 mt-1">Gestión y contacto de cuentas</p>
+              </div>
+              <div>
+                <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-sky-500 hover:bg-sky-600 text-white font-semibold">+ Nuevo Cliente</button>
+              </div>
+            </header>
+
+            {/* Mini dashboard */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-4 shadow flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center text-slate-500">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 21v-2a4 4 0 0 0-4-4H8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <div className="text-sm text-slate-500">Total Clientes</div>
+                  <div className="text-xl font-semibold text-slate-800">{clients.length}</div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center text-slate-500">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 21v-2a4 4 0 0 0-4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M7 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <div className="text-sm text-slate-500">Clientes Activos</div>
+                  <div className="text-xl font-semibold text-slate-800">{clients.filter(c => c.status === 'Activo').length}</div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center text-slate-500">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M5 7v14h14V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <div className="text-sm text-slate-500">Revendedores</div>
+                  <div className="text-xl font-semibold text-slate-800">{clients.filter(c => c.type === 'Revendedor').length}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de clientes */}
+            <div className="bg-white rounded-lg shadow">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-50">
+                  <tr className="text-xs uppercase text-slate-500">
+                    <th className="p-4 border-b border-slate-100">Cliente</th>
+                    <th className="p-4 border-b border-slate-100">Contacto</th>
+                    <th className="p-4 border-b border-slate-100">Dirección</th>
+                    <th className="p-4 border-b border-slate-100">Tipo</th>
+                    <th className="p-4 border-b border-slate-100">Estado</th>
+                    <th className="p-4 border-b border-slate-100">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clients.map((c) => {
+                    const typeClass = c.type === 'Club' ? 'bg-emerald-100 text-emerald-800' : c.type === 'Revendedor' ? 'bg-violet-100 text-violet-800' : c.type === 'Empresa' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'
+                    return (
+                      <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="font-medium text-slate-900">{c.businessName}</div>
+                          <div className="text-sm text-slate-500">{c.contactName}</div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="flex items-center gap-2 text-sm text-slate-700">
+                            <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3 5.18 2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.72c.12 1.05.5 2.05 1.12 2.93a2 2 0 0 1-.45 2.54L9 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <span>{c.phone}</span>
+                          </div>
+                          <div className="text-sm text-slate-500 mt-1">{c.email}</div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100 text-slate-500">{c.address}</td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${typeClass}`}>{c.type}</span>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full ${c.status === 'Activo' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            <span className="text-sm text-slate-700">{c.status}</span>
+                          </div>
+                        </td>
+                        <td className="p-4 align-top border-b border-slate-100">
+                          <button className="p-2 rounded-md hover:bg-slate-100">
+                            <svg className="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="12" cy="18" r="1.5" stroke="currentColor" strokeWidth="1.2"/></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
       </main>
     </div>
   )
